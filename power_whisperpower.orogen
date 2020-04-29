@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 name "power_whisperpower"
 version "0.1"
 
@@ -6,15 +8,65 @@ import_types_from "power_whisperpowerTypes.hpp"
 import_types_from "std"
 import_types_from "base"
 import_types_from "power_base"
+import_types_from "canbus"
 
 using_library "power_whisperpower"
+import_types_from "power_whisperpower/DCPowerCubeStatus.hpp"
+import_types_from "power_whisperpower/SmartShuntStatus.hpp"
 
 # Driver component for the DC Cubes
-task_context "Task", subclasses: "iodrivers_base::Task" do
+task_context "DCPowerCubeTask" do
     needs_configuration
 
+    property "device_id", "/int", 1
+
+    # CAN messages coming from the device
+    input_port("can_in", "/canbus/Message")
+        .needs_reliable_connection
+    # CAN messages for the device (e.g. configuration messages)
+    output_port "can_out", "/canbus/Message"
+
+    # Full DC Cube status
+    #
+    # This contains information that is not present in the power_base
+    # messages
+    output_port "full_status", "/power_whisperpower/DCPowerCubeStatus"
+
+    # State of the grid, if connected
+    output_port "ac_grid_status", "/power_base/ACSourceStatus"
+    # State of the AC generator, if present
+    #
+    # The DC Cubes give only frequency and speed information about
+    # the generator
     output_port "ac_generator_status", "/power_base/ACGeneratorStatus"
-    output_port "ac_source_status", "/power_base/ACSourceStatus"
+    # Output of the DC Cube itself
+    output_port "dc_output_status", "/power_base/DCSourceStatus"
+
+    port_driven
+end
+
+# Driver component for the Smart Shunt battery monitor
+task_context "SmartShuntTask" do
+    needs_configuration
+
+    property "device_id", "/int", 1
+
+    # CAN messages coming from the device
+    input_port("can_in", "/canbus/Message")
+        .needs_reliable_connection
+    # CAN messages for the device (e.g. configuration messages)
+    output_port "can_out", "/canbus/Message"
+
+    # Full shunt status
+    #
+    # This contains information that is not present in the power_base
+    # messages
+    output_port "full_status", "/power_whisperpower/SmartShuntStatus"
+
+    # State of the battery being monitored
     output_port "battery_status", "/power_base/BatteryStatus"
-    output_port "dc_source_status", "/power_base/DCSourceStatus"
+    # State of the battery as a DC source
+    output_port "battery_dc_output_status", "/power_base/DCSourceStatus"
+
+    port_driven
 end

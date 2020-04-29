@@ -6,6 +6,8 @@
 
   <depend package="base/cmake" />
   <depend package="drivers/power_whisperpower" />
-  <depend package="drivers/orogen/iodrivers_base" />
+  <depend package="drivers/orogen/canbus" />
   <depend package="drivers/orogen/power_base" />
+
+  <test_depend package="tools/syskit" />
 </package>

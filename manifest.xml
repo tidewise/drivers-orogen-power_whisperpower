@@ -1,19 +1,13 @@
 <package>
   <description brief="oroGen integration of the WhisperPower driver library">
-  
   </description>
   <author>Sylvain Joyeux/sylvain.joyeux@tidewise.io</author>
-  <license></license>
-  <url>http://</url>
-  <logo>http://</logo>
+  <license>LGPLv2 or later</license>
+
   <depend package="base/cmake" />
-  <!--
-   To add any dependencies use the depend tag
-  <depend package="dummy-dependency-0" />
-	...
-  <depend package="dummy-dependency-n-1" />
-  <depend package="dummy-dependency-n" />
-  -->
   <depend package="drivers/power_whisperpower" />
-  <depend package="drivers/orogen/iodrivers_base" />
+  <depend package="drivers/orogen/canbus" />
+  <depend package="drivers/orogen/power_base" />
+
+  <test_depend package="tools/syskit" />
 </package>

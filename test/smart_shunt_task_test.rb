@@ -33,7 +33,8 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.full_status_port }
 
-        assert_equal now.tv_sec, status.time.tv_sec
+        assert now < status.time
+        assert status.time < Time.now
     end
 
     it "outputs nothing on partial updates" do
@@ -95,7 +96,8 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.battery_status_port }
 
-        assert_equal now.tv_sec, status.time.tv_sec
+        assert now < status.time
+        assert status.time < Time.now
         assert_equal 283.15, status.temperature.kelvin
         assert_in_delta 0.45, status.charge
     end
@@ -111,7 +113,8 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.battery_dc_output_status_port }
 
-        assert_equal now.tv_sec, status.time.tv_sec
+        assert now < status.time
+        assert status.time < Time.now
         assert_in_delta 0.258, status.voltage
         assert_in_delta 77.2, status.current
     end

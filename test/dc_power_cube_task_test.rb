@@ -24,16 +24,17 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
     end
 
     it "outputs a full state after receiving a full update" do
-        now = Time.now
+        now = rock_now
         status = expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x2100, [0, 0, 0, 0], time: now),
+                make_read_reply(0x2100, [0, 0, 0, 0]),
                 make_read_reply(0x21A0, [0, 0, 0, 0])
             )
         end.to { have_one_new_sample task.full_status_port }
 
-        assert_equal now.tv_sec, status.time.tv_sec
+        assert now <= status.time
+        assert status.time <= Time.now
     end
 
     it "outputs nothing on partial updates" do
@@ -95,17 +96,18 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
     end
 
     it "outputs the generator status if the generator is present" do
-        now = Time.now
+        now = rock_now
         sample = expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x2100, [128, 0, 0, 0], time: now),
+                make_read_reply(0x2100, [128, 0, 0, 0]),
                 make_read_reply(0x2112, [0, 100, 0, 50]),
                 make_read_reply(0x21A0)
             )
         end.to { have_one_new_sample task.ac_generator_status_port }
 
-        assert_equal now.tv_sec, sample.time.tv_sec
+        assert now <= sample.time
+        assert sample.time <= Time.now
         assert_equal 100, sample.frequency
         assert_in_delta 50 * 60 * 2 * Math::PI, sample.generator_rotational_velocity
     end
@@ -119,37 +121,44 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
     end
 
     it "outputs the grid status if the grid is present" do
-        now = Time.now
+        now = rock_now
         sample = expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x2100, [64, 0, 0, 0], time: now),
+                make_read_reply(0x2100, [64, 0, 0, 0]),
                 make_read_reply(0x2111, [1, 20, 10, 50]),
                 make_read_reply(0x21A0)
             )
         end.to { have_one_new_sample task.ac_grid_status_port }
 
-        assert_equal now.tv_sec, sample.time.tv_sec
+        assert now <= sample.time
+        assert sample.time <= Time.now
         assert sample.frequency.nan?
         assert_in_delta 276, sample.voltage
         assert_in_delta 10, sample.current
     end
 
     it "outputs the DC output status" do
-        now = Time.now
+        now = rock_now
         sample = expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x2100, time: now),
+                make_read_reply(0x2100),
                 make_read_reply(0x2152, [1, 20, 10, 50]),
                 make_read_reply(0x2153, [2, 5, 10, 50]),
                 make_read_reply(0x21A0)
             )
         end.to { have_one_new_sample task.dc_output_status_port }
 
-        assert_equal now.tv_sec, sample.time.tv_sec
+        assert now <= sample.time
+        assert sample.time <= Time.now
         assert_in_delta 0.276, sample.voltage
         assert_in_delta 517, sample.current
+    end
+
+    def rock_now
+        now = Time.now
+        Time.at(now.tv_sec, now.tv_usec / 1000, :millisecond)
     end
 
     def make_read_reply(msg_type, data = [0, 0, 0, 0], node_id: 0x35, time: Time.now)

@@ -24,7 +24,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
     end
 
     it "outputs a full state after receiving a full update" do
-        now = Time.now
+        now = rock_now
         status = expect_execution do
             syskit_write(
                 task.can_in_port,
@@ -33,8 +33,8 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.full_status_port }
 
-        assert now < status.time
-        assert status.time < Time.now
+        assert now <= status.time
+        assert status.time <= Time.now
     end
 
     it "outputs nothing on partial updates" do
@@ -86,7 +86,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
     end
 
     it "outputs the battery status" do
-        now = Time.now
+        now = rock_now
         status = expect_execution do
             syskit_write(
                 task.can_in_port,
@@ -96,14 +96,14 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.battery_status_port }
 
-        assert now < status.time
-        assert status.time < Time.now
+        assert now <= status.time
+        assert status.time <= Time.now
         assert_equal 283.15, status.temperature.kelvin
         assert_in_delta 0.45, status.charge
     end
 
     it "outputs the DC source status" do
-        now = Time.now
+        now = rock_now
         status = expect_execution do
             syskit_write(
                 task.can_in_port,
@@ -113,10 +113,15 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             )
         end.to { have_one_new_sample task.battery_dc_output_status_port }
 
-        assert now < status.time
-        assert status.time < Time.now
+        assert now <= status.time
+        assert status.time <= Time.now
         assert_in_delta 0.258, status.voltage
         assert_in_delta 77.2, status.current
+    end
+
+    def rock_now
+        now = Time.now
+        Time.at(now.tv_sec, now.tv_usec / 1000, :millisecond)
     end
 
     def make_read_reply(msg_type, data = [0, 0, 0, 0], node_id: 0x15, time: Time.now)

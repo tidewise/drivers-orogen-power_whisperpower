@@ -91,6 +91,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
             syskit_write(
                 task.can_in_port,
                 make_read_reply(0x2100, time: now),
+                make_read_reply(0x2111, [1, 2, 3, 4]),
                 make_read_reply(0x2112, [45, 0, 0, 0]),
                 make_read_reply(0x21A0, [10, 0, 0, 0])
             )
@@ -98,6 +99,8 @@ describe OroGen.power_whisperpower.SmartShuntTask do
 
         assert now <= status.time
         assert status.time <= Time.now
+        assert_in_delta 0.258, status.voltage
+        assert_in_delta 77.2, status.current
         assert_equal 283.15, status.temperature.kelvin
         assert_in_delta 0.45, status.charge
     end

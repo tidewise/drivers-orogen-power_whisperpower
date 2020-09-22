@@ -37,6 +37,8 @@ static BatteryStatus toBatteryStatus(SmartShuntStatus const& status) {
     ret.time = status.time;
     ret.temperature = status.temperature_bts;
     ret.charge = status.battery_charge;
+    ret.voltage = status.battery_voltage;
+    ret.current = status.shunt_current;
     return ret;
 }
 static DCSourceStatus toDCSourceStatus(SmartShuntStatus const& status) {

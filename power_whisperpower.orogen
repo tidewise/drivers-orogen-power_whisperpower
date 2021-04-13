@@ -51,6 +51,9 @@ task_context "SmartShuntTask" do
 
     property "device_id", "/int", 1
 
+    # Max current draw for the battery bank monitored by this shunt
+    property "max_current", "/float"
+
     # CAN messages coming from the device
     input_port("can_in", "/canbus/Message")
         .needs_reliable_connection

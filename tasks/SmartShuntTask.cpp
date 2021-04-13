@@ -9,6 +9,7 @@ SmartShuntTask::SmartShuntTask(std::string const& name)
     : SmartShuntTaskBase(name)
     , m_driver(0)
 {
+    _max_current.set(base::unknown<float>());
 }
 
 SmartShuntTask::~SmartShuntTask()
@@ -64,8 +65,10 @@ void SmartShuntTask::updateHook()
         _full_status.write(status);
         m_driver.resetFullUpdate();
 
-        _battery_status.write(toBatteryStatus(status));
         _battery_dc_output_status.write(toDCSourceStatus(status));
+        auto batteryStatus = toBatteryStatus(status);
+        batteryStatus.max_current = _max_current.get();
+        _battery_status.write(batteryStatus);
     }
 }
 void SmartShuntTask::errorHook()

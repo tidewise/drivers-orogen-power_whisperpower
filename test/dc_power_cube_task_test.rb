@@ -154,6 +154,7 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
         assert sample.time <= Time.now
         assert_in_delta 0.276, sample.voltage
         assert_in_delta 517, sample.current
+        assert_in_delta 2_610, sample.max_current
     end
 
     def rock_now

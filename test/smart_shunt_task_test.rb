@@ -19,6 +19,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
                   .deployed_as("task_under_test")
         )
         task.properties.device_id = 5
+        task.properties.max_current = 22
         syskit_configure_and_start(task)
         task
     end
@@ -120,6 +121,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
         assert status.time <= Time.now
         assert_in_delta 0.258, status.voltage
         assert_in_delta 77.2, status.current
+        assert_in_delta 22, status.max_current
     end
 
     def rock_now

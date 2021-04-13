@@ -52,6 +52,7 @@ static DCSourceStatus toDCSourceStatus(DCPowerCubeStatus const& status) {
     ret.time = status.time;
     ret.voltage = status.dc_output_voltage;
     ret.current = status.dc_output_current;
+    ret.max_current = status.dc_output_current_limit;
     return ret;
 }
 

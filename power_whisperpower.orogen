@@ -68,8 +68,6 @@ task_context "SmartShuntTask" do
 
     # State of the battery being monitored
     output_port "battery_status", "/power_base/BatteryStatus"
-    # State of the battery as a DC source
-    output_port "battery_dc_output_status", "/power_base/DCSourceStatus"
 
     port_driven
 end

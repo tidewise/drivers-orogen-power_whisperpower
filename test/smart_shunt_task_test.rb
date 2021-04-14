@@ -19,6 +19,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
                   .deployed_as("task_under_test")
         )
         task.properties.device_id = 5
+        task.properties.max_current = 22
         syskit_configure_and_start(task)
         task
     end
@@ -103,23 +104,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
         assert_in_delta 77.2, status.current
         assert_equal 283.15, status.temperature.kelvin
         assert_in_delta 0.45, status.charge
-    end
-
-    it "outputs the DC source status" do
-        now = rock_now
-        status = expect_execution do
-            syskit_write(
-                task.can_in_port,
-                make_read_reply(0x2100, time: now),
-                make_read_reply(0x2111, [1, 2, 3, 4]),
-                make_read_reply(0x21A0)
-            )
-        end.to { have_one_new_sample task.battery_dc_output_status_port }
-
-        assert now <= status.time
-        assert status.time <= Time.now
-        assert_in_delta 0.258, status.voltage
-        assert_in_delta 77.2, status.current
+        assert_in_delta 22, status.max_current
     end
 
     def rock_now

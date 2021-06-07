@@ -101,7 +101,7 @@ describe OroGen.power_whisperpower.SmartShuntTask do
         assert now <= status.time
         assert status.time <= Time.now
         assert_in_delta 0.258, status.voltage
-        assert_in_delta 77.2, status.current
+        assert_in_delta -77.2, status.current
         assert_equal 283.15, status.temperature.kelvin
         assert_in_delta 0.45, status.charge
         assert_in_delta 22, status.max_current

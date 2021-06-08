@@ -39,7 +39,7 @@ static BatteryStatus toBatteryStatus(SmartShuntStatus const& status) {
     ret.temperature = status.temperature_bts;
     ret.charge = status.battery_charge;
     ret.voltage = status.battery_voltage;
-    ret.current = status.shunt_current;
+    ret.current = -status.shunt_current;
     return ret;
 }
 void SmartShuntTask::updateHook()

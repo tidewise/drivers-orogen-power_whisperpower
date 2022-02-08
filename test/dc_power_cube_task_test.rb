@@ -157,7 +157,68 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
         sample = expect_execution do
             syskit_write(
                 task.can_in_port,
+                make_read_reply(0x2100, [128, 0, 0, 0]),
+                make_read_reply(0x2152, [1, 20, 10, 50]),
+                make_read_reply(0x2153, [2, 5, 10, 50]),
+                make_read_reply(0x21A0)
+            )
+        end.to { have_one_new_sample task.dc_output_status_port }
+
+        assert now <= sample.time
+        assert sample.time <= Time.now
+        assert_in_delta 0.276, sample.voltage
+        assert_in_delta 517, sample.current
+        assert_in_delta 2_610, sample.max_current
+    end
+
+    it "reports a zero max current if there is no energy source" do
+        sample = expect_execution do
+            syskit_write(
+                task.can_in_port,
                 make_read_reply(0x2100),
+                make_read_reply(0x2152, [1, 20, 10, 50]),
+                make_read_reply(0x2153, [2, 5, 10, 50]),
+                make_read_reply(0x21A0)
+            )
+        end.to { have_one_new_sample task.dc_output_status_port }
+
+        assert_in_delta 0, sample.max_current
+    end
+
+    it "reports the max current if the generator is ON" do
+        sample = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                make_read_reply(0x2100, [128, 0, 0, 0]),
+                make_read_reply(0x2152, [1, 20, 10, 50]),
+                make_read_reply(0x2153, [2, 5, 10, 50]),
+                make_read_reply(0x21A0)
+            )
+        end.to { have_one_new_sample task.dc_output_status_port }
+
+        assert_in_delta 2_610, sample.max_current
+    end
+
+    it "reports the max current if the grid is connected" do
+        sample = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                make_read_reply(0x2100, [64, 0, 0, 0]),
+                make_read_reply(0x2152, [1, 20, 10, 50]),
+                make_read_reply(0x2153, [2, 5, 10, 50]),
+                make_read_reply(0x21A0)
+            )
+        end.to { have_one_new_sample task.dc_output_status_port }
+
+        assert_in_delta 2_610, sample.max_current
+    end
+
+    it "outputs the DC output status" do
+        now = rock_now
+        sample = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                make_read_reply(0x2100, [128, 0, 0, 0]),
                 make_read_reply(0x2152, [1, 20, 10, 50]),
                 make_read_reply(0x2153, [2, 5, 10, 50]),
                 make_read_reply(0x21A0)

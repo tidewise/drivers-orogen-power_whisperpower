@@ -36,15 +36,28 @@ bool DCPowerCubeTask::startHook()
 static ACSourceStatus toACGridStatus(DCPowerCubeStatus const& status) {
     ACSourceStatus ret;
     ret.time = status.time;
-    ret.voltage = status.grid_voltage;
-    ret.current = status.grid_current;
+    if (status.status & DCPowerCubeStatus::STATUS_GRID_PRESENT) {
+        ret.voltage = status.grid_voltage;
+        ret.current = status.grid_current;
+    }
+    else {
+        ret.voltage = 0;
+        ret.current = 0;
+    }
     return ret;
 }
 static ACGeneratorStatus toACGeneratorStatus(DCPowerCubeStatus const& status) {
     ACGeneratorStatus ret;
     ret.time = status.time;
-    ret.frequency = status.generator_frequency;
-    ret.generator_rotational_velocity = status.generator_rotational_velocity;
+
+    if (status.status & DCPowerCubeStatus::STATUS_GENERATOR_PRESENT) {
+        ret.frequency = status.generator_frequency;
+        ret.generator_rotational_velocity = status.generator_rotational_velocity;
+    }
+    else {
+        ret.frequency = 0;
+        ret.generator_rotational_velocity = 0;
+    }
     return ret;
 }
 static DCSourceStatus toDCSourceStatus(DCPowerCubeStatus const& status) {
@@ -52,7 +65,13 @@ static DCSourceStatus toDCSourceStatus(DCPowerCubeStatus const& status) {
     ret.time = status.time;
     ret.voltage = status.dc_output_voltage;
     ret.current = status.dc_output_current;
-    ret.max_current = status.dc_output_current_limit;
+    if (status.status & DCPowerCubeStatus::STATUS_GENERATOR_PRESENT ||
+        status.status & DCPowerCubeStatus::STATUS_GRID_PRESENT) {
+        ret.max_current = status.dc_output_current_limit;
+    }
+    else {
+        ret.max_current = 0;
+    }
     return ret;
 }
 
@@ -72,12 +91,8 @@ void DCPowerCubeTask::updateHook()
         _full_status.write(status);
         m_driver.resetFullUpdate();
 
-        if (status.status & DCPowerCubeStatus::STATUS_GENERATOR_PRESENT) {
-            _ac_generator_status.write(toACGeneratorStatus(status));
-        }
-        if (status.status & DCPowerCubeStatus::STATUS_GRID_PRESENT) {
-            _ac_grid_status.write(toACGridStatus(status));
-        }
+        _ac_generator_status.write(toACGeneratorStatus(status));
+        _ac_grid_status.write(toACGridStatus(status));
         _dc_output_status.write(toDCSourceStatus(status));
     }
 }

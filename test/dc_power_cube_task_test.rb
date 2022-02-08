@@ -87,12 +87,19 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
         end.to { have_one_new_sample task.full_status_port }
     end
 
-    it "does not output the generator status if the generator is not present" do
-        expect_execution do
+    it "outputs the generator status even if the generator is not present" do
+        before = rock_now
+        sample = expect_execution do
             syskit_write(
                 task.can_in_port, make_read_reply(0x2100), make_read_reply(0x21A0)
             )
-        end.to { have_no_new_sample task.ac_generator_status_port }
+        end.to { have_one_new_sample task.ac_generator_status_port }
+
+        assert_operator before, :<=, sample.time
+        assert_operator sample.time, :<, Time.now
+        assert sample.time <= Time.now
+        assert_equal 0, sample.frequency
+        assert_equal 0, sample.generator_rotational_velocity
     end
 
     it "outputs the generator status if the generator is present" do
@@ -112,12 +119,19 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
         assert_in_delta 50 * 60 * 2 * Math::PI, sample.generator_rotational_velocity
     end
 
-    it "does not output the grid status if the grid is not present" do
-        expect_execution do
+    it "outputs the grid status even if the grid is not present" do
+        before = rock_now
+        sample = expect_execution do
             syskit_write(
                 task.can_in_port, make_read_reply(0x2100), make_read_reply(0x21A0)
             )
-        end.to { have_no_new_sample task.ac_grid_status_port }
+        end.to { have_one_new_sample task.ac_grid_status_port }
+
+        assert_operator before, :<=, sample.time
+        assert_operator sample.time, :<, Time.now
+        assert sample.time <= Time.now
+        assert_equal 0, sample.voltage
+        assert_equal 0, sample.current
     end
 
     it "outputs the grid status if the grid is present" do

@@ -12,6 +12,7 @@ import_types_from "canbus"
 
 using_library "power_whisperpower"
 import_types_from "power_whisperpower/DCPowerCubeStatus.hpp"
+import_types_from "power_whisperpower/PMGGenverterStatus.hpp"
 import_types_from "power_whisperpower/SmartShuntStatus.hpp"
 
 # Driver component for the DC Cubes
@@ -41,6 +42,22 @@ task_context "DCPowerCubeTask" do
     output_port "ac_generator_status", "/power_base/ACGeneratorStatus"
     # Output of the DC Cube itself
     output_port "dc_output_status", "/power_base/DCSourceStatus"
+
+    port_driven
+end
+
+# Driver component for the PMG Genverter
+task_context "PMGGenverterTask" do
+    needs_configuration
+
+    # CAN messages coming from the device
+    input_port("can_in", "/canbus/Message")
+        .needs_reliable_connection
+    # CAN messages for the device (e.g. configuration messages)
+    output_port "can_out", "/canbus/Message"
+
+    # Full PMG Genverter status
+    output_port "full_status", "/power_whisperpower/PMGGenverterStatus"
 
     port_driven
 end

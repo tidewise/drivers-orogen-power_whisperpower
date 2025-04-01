@@ -50,6 +50,12 @@ end
 task_context "PMGGenverterTask" do
     needs_configuration
 
+    # Control command
+    #
+    # Set a control command (start, stop or keep_alive) to be sent in a frame
+    # to the power controller
+    input_port "control_cmd", "bool"
+
     # CAN messages coming from the device
     input_port("can_in", "/canbus/Message")
         .needs_reliable_connection

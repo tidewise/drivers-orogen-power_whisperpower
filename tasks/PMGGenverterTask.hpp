@@ -31,6 +31,9 @@ namespace power_whisperpower {
 
     protected:
         PMGGenverter m_driver;
+        bool m_ready_to_command;
+
+        void sendNoCommand();
 
     public:
         /** TaskContext constructor for PMGGenverterTask

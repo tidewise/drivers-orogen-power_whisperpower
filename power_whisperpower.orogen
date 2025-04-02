@@ -13,6 +13,7 @@ import_types_from "canbus"
 using_library "power_whisperpower"
 import_types_from "power_whisperpower/DCPowerCubeStatus.hpp"
 import_types_from "power_whisperpower/PMGGenverterStatus.hpp"
+import_types_from "power_whisperpower/RunTimeState.hpp"
 import_types_from "power_whisperpower/SmartShuntStatus.hpp"
 
 # Driver component for the DC Cubes
@@ -64,6 +65,9 @@ task_context "PMGGenverterTask" do
 
     # Full PMG Genverter status
     output_port "full_status", "/power_whisperpower/PMGGenverterStatus"
+
+    # Total work and maintenance work
+    output_port "run_time_state", "/power_whisperpower/RunTimeState"
 
     port_driven
 end

@@ -61,6 +61,8 @@ void PMGGenverterTask::updateHook()
 
         auto status = m_driver.getStatus();
         _full_status.write(status);
+        auto run_time_state = m_driver.getRunTimeState();
+        _run_time_state.write(run_time_state);
         m_driver.resetFullUpdate();
     }
 

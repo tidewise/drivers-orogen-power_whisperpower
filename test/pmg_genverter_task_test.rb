@@ -22,7 +22,8 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         task
     end
 
-    it "expects a sample when receiving all messages" do
+    it "expects a full_status and a run_time_state sample when " \
+       "receiving all messages" do
         now = rock_now
         status = expect_execution do
             syskit_write(
@@ -34,13 +35,17 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 make_read_reply(0x204),
                 make_read_reply(0x205)
             )
-        end.to { have_one_new_sample task.full_status_port }
+        end.to do
+            have_one_new_sample task.full_status_port
+            have_one_new_sample task.run_time_state_port
+        end
 
         assert now <= status.time
         assert status.time <= Time.now
     end
 
-    it "expects no sample when message 0x205 is not received" do
+    it "expects no full_status or run_time_state sample when " \
+       "message 0x205 is not received" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
@@ -50,19 +55,26 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 make_read_reply(0x203),
                 make_read_reply(0x204)
             )
-        end.to { have_no_new_sample task.full_status_port }
+        end.to do
+            have_no_new_sample task.full_status_port
+            have_no_new_sample task.run_time_state_port
+        end
     end
 
-    it "expects a sample when only message 0x205 is received" do
+    it "expects a full_status and a run_time_state sample when " \
+       "only message 0x205 is received" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
                 make_read_reply(0x205)
             )
-        end.to { have_one_new_sample task.full_status_port }
+        end.to do
+            have_one_new_sample task.full_status_port
+            have_one_new_sample task.run_time_state_port
+        end
     end
 
-    it "expects full update to be reset when writing a message other than 0x205" do
+    it "expects full_status to be reset when writing a message other than 0x205" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
@@ -95,7 +107,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 task.can_in_port,
                 make_read_reply(0x205)
             )
-        end.to { have_one_new_sample task.full_status_port }
+        end.to { have_one_new_sample task.run_time_state_port }
 
         no_command = expect_execution do
             syskit_write task.control_cmd_port, true

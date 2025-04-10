@@ -35,6 +35,14 @@ namespace power_whisperpower {
 
         void sendNoCommand();
 
+        /**
+         * @brief Get the Device State object from the full status report
+         * 
+         * @param status The full device status report
+         * @return DeviceState 
+         */
+        DeviceState getDeviceState(PMGGenverterStatus const& status);
+
     public:
         /** TaskContext constructor for PMGGenverterTask
          * \param name Name of the task. This name needs to be unique to make it

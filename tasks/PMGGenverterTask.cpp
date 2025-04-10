@@ -43,6 +43,15 @@ void PMGGenverterTask::sendNoCommand()
         usleep(2000);
     }
 }
+DeviceState power_whisperpower::PMGGenverterTask::getDeviceState(
+    PMGGenverterStatus const& status)
+{
+    uint8_t running_state = PMGGenverterStatus::Status::GENERATION_ENABLED |
+                        PMGGenverterStatus::Status::ENGINE_ENABLED;
+    bool device_running = (status.status & running_state) == running_state;
+    DeviceState state(device_running, !device_running);
+    return state;
+}
 void PMGGenverterTask::updateHook()
 {
     PMGGenverterTaskBase::updateHook();

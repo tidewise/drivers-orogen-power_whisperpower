@@ -17,6 +17,8 @@ import_types_from "power_whisperpower/PMGGenverterStatus.hpp"
 import_types_from "power_whisperpower/RunTimeState.hpp"
 import_types_from "power_whisperpower/SmartShuntStatus.hpp"
 
+typekit.export_types "power_whisperpower/DeviceState"
+
 # Driver component for the DC Cubes
 task_context "DCPowerCubeTask" do
     needs_configuration

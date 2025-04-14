@@ -12,12 +12,12 @@ import_types_from "canbus"
 
 using_library "power_whisperpower"
 import_types_from "power_whisperpower/DCPowerCubeStatus.hpp"
-import_types_from "power_whisperpower/DeviceState.hpp"
+import_types_from "power_whisperpower/GeneratorState.hpp"
 import_types_from "power_whisperpower/PMGGenverterStatus.hpp"
 import_types_from "power_whisperpower/RunTimeState.hpp"
 import_types_from "power_whisperpower/SmartShuntStatus.hpp"
 
-typekit.export_types "power_whisperpower/DeviceState"
+typekit.export_types "power_whisperpower/GeneratorState"
 
 # Driver component for the DC Cubes
 task_context "DCPowerCubeTask" do
@@ -72,8 +72,8 @@ task_context "PMGGenverterTask" do
     # Total work and maintenance work
     output_port "run_time_state", "/power_whisperpower/RunTimeState"
 
-    # The device state, indicating if it is running or stopped
-    output_port "device_state", "/power_whisperpower/DeviceState"
+    # The generator state, indicating if it is running or stopped
+    output_port "generator_state", "/power_whisperpower/GeneratorState"
 
     port_driven
 end

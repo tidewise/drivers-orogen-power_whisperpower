@@ -36,12 +36,12 @@ namespace power_whisperpower {
         void sendNoCommand();
 
         /**
-         * @brief Get the Device State object from the full status report
+         * @brief Get the Generator State object from the full status report
          * 
-         * @param status The full device status report
-         * @return DeviceState 
+         * @param status The generator full status report
+         * @return GeneratorState 
          */
-        DeviceState getDeviceState(PMGGenverterStatus const& status);
+        GeneratorState getGeneratorState(PMGGenverterStatus const& status);
 
     public:
         /** TaskContext constructor for PMGGenverterTask

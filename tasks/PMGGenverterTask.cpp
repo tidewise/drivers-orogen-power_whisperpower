@@ -43,14 +43,20 @@ void PMGGenverterTask::sendNoCommand()
         usleep(2000);
     }
 }
-DeviceState power_whisperpower::PMGGenverterTask::getDeviceState(
+GeneratorState power_whisperpower::PMGGenverterTask::getGeneratorState(
     PMGGenverterStatus const& status)
 {
     uint8_t running_state = PMGGenverterStatus::Status::GENERATION_ENABLED |
-                        PMGGenverterStatus::Status::ENGINE_ENABLED;
-    bool device_running = (status.status & running_state) == running_state;
-    DeviceState state(device_running, !device_running);
-    return state;
+                            PMGGenverterStatus::Status::ENGINE_ENABLED;
+    if ((status.status & running_state) == running_state) {
+        return GeneratorState::RUNNING;
+    }
+    else if (!(PMGGenverterStatus::Status::GENERATION_ENABLED & status.status)) {
+        return GeneratorState::STOPPED;
+    }
+    else{
+        return GeneratorState::FAILURE;
+    }
 }
 void PMGGenverterTask::updateHook()
 {
@@ -69,6 +75,8 @@ void PMGGenverterTask::updateHook()
         }
 
         auto status = m_driver.getStatus();
+        auto generator_state = getGeneratorState(status);
+        _generator_state.write(generator_state);
         _full_status.write(status);
         auto run_time_state = m_driver.getRunTimeState();
         _run_time_state.write(run_time_state);

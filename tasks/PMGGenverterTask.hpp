@@ -33,16 +33,9 @@ namespace power_whisperpower {
         PMGGenverter m_driver;
         bool m_ready_to_command;
         bool m_last_command = false;
+        base::Time m_restart_duration;
         base::Time m_restart_command_deadline;
-
-        /**
-         * @brief Get the Generator State object from the full status report
-         *
-         * @param status The generator full status report
-         * @return GeneratorState
-         */
-        GeneratorState getGeneratorState(PMGGenverterStatus const& status);
-
+        void writeStates();
         void handleControlCommand(bool control_cmd);
 
     public:

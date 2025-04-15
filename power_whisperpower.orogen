@@ -54,16 +54,20 @@ end
 task_context "PMGGenverterTask" do
     needs_configuration
 
+    # The duration sending the restart command before the start command
+    #
+    # This is done to ensure that the device is fully reseted before the startup
+    property "restart_duration", "/base/Time"
+
     # Control command
     #
-    # Set a control command (start, stop or keep_alive) to be sent in a frame
-    # to the power controller
+    # true to start the device, false to stop it
     input_port "control_cmd", "bool"
 
     # CAN messages coming from the device
     input_port("can_in", "/canbus/Message")
         .needs_reliable_connection
-    # CAN messages for the device (e.g. configuration messages)
+    # CAN messages for the device
     output_port "can_out", "/canbus/Message"
 
     # Full PMG Genverter status
@@ -72,7 +76,7 @@ task_context "PMGGenverterTask" do
     # Total work and maintenance work
     output_port "run_time_state", "/power_whisperpower/RunTimeState"
 
-    # The generator state, indicating if it is running or stopped
+    # The generator state
     output_port "generator_state", "/power_whisperpower/GeneratorState"
 
     port_driven

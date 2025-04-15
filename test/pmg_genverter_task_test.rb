@@ -18,13 +18,14 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             OroGen.power_whisperpower.PMGGenverterTask
                   .deployed_as("task_under_test")
         )
+        task.properties.restart_duration = Time.at(0.3)
         syskit_configure_and_start(task)
         task
     end
 
     it "expects a full_status, a run_time_state and a generator_state sample when " \
        "receiving all messages" do
-        outputs = expect_execution do
+        expect_execution do
             syskit_write(
                 task.can_in_port,
                 create_message(0x200),
@@ -110,7 +111,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         outputs = expect_execution do
             syskit_write(
                 task.can_in_port,
-                create_message(0x201,[0,5,0,0,0,0,0,0]),
+                create_message(0x201, [0, 5, 0, 0, 0, 0, 0, 0]),
                 create_message(0x204),
                 create_message(0x205)
             )
@@ -130,7 +131,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
-                create_message(0x201,[0,5,0,0,0,0,0,0]),
+                create_message(0x201, [0, 5, 0, 0, 0, 0, 0, 0]),
                 create_message(0x205)
             )
         end.to do

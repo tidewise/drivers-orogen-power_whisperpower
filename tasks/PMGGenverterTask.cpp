@@ -32,17 +32,10 @@ bool PMGGenverterTask::startHook()
         return false;
 
     m_driver.resetFullUpdate();
+    m_last_command = false;
     return true;
 }
-void PMGGenverterTask::sendNoCommand()
-{
-    base::Time deadline = base::Time::now() + base::Time::fromMilliseconds(30);
 
-    while (base::Time::now() < deadline) {
-        _can_out.write(m_driver.queryGeneratorCommand(false, false));
-        usleep(2000);
-    }
-}
 GeneratorState power_whisperpower::PMGGenverterTask::getGeneratorState(
     PMGGenverterStatus const& status)
 {
@@ -54,7 +47,7 @@ GeneratorState power_whisperpower::PMGGenverterTask::getGeneratorState(
     else if (!(PMGGenverterStatus::Status::GENERATION_ENABLED & status.status)) {
         return GeneratorState::STOPPED;
     }
-    else{
+    else {
         return GeneratorState::FAILURE;
     }
 }
@@ -84,9 +77,31 @@ void PMGGenverterTask::updateHook()
     }
 
     bool control_cmd;
-    while (m_ready_to_command && _control_cmd.read(control_cmd, false) == RTT::NewData) {
-        sendNoCommand();
-        _can_out.write(m_driver.queryGeneratorCommand(control_cmd, !control_cmd));
+    if (_control_cmd.read(control_cmd) != RTT::NewData) {
+        return;
+    }
+    if (m_ready_to_command) {
+        handleControlCommand(control_cmd);
+    }
+}
+void PMGGenverterTask::handleControlCommand(bool control_cmd)
+{
+    if (control_cmd) {
+        if (control_cmd != m_last_command) {
+            m_restart_command_deadline =
+                base::Time::now() + base::Time::fromMilliseconds(250);
+            m_last_command = control_cmd;
+        }
+        if (base::Time::now() <= m_restart_command_deadline) {
+            _can_out.write(m_driver.queryGeneratorCommand(false, false));
+        }
+        else {
+            _can_out.write(m_driver.queryGeneratorCommand(true, false));
+        }
+    }
+    else {
+        _can_out.write(m_driver.queryGeneratorCommand(false, true));
+        m_last_command = control_cmd;
     }
 }
 void PMGGenverterTask::errorHook()

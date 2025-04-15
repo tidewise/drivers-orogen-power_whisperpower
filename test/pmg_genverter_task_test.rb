@@ -22,70 +22,75 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         task
     end
 
-    it "expects a full_status and a run_time_state sample when " \
+    it "expects a full_status, a run_time_state and a generator_state sample when " \
        "receiving all messages" do
-        now = rock_now
-        status = expect_execution do
+        outputs = expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x200),
-                make_read_reply(0x201),
-                make_read_reply(0x202),
-                make_read_reply(0x203),
-                make_read_reply(0x204),
-                make_read_reply(0x205)
+                create_message(0x200),
+                create_message(0x201),
+                create_message(0x202),
+                create_message(0x203),
+                create_message(0x204),
+                create_message(0x205)
             )
         end.to do
-            have_one_new_sample task.full_status_port
-            have_one_new_sample task.run_time_state_port
+            [
+                have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.run_time_state_port),
+                have_one_new_sample(task.generator_state_port),
+                have_no_new_sample(task.can_out_port)
+            ]
         end
-
-        assert now <= status.time
-        assert status.time <= Time.now
     end
 
-    it "expects no full_status or run_time_state sample when " \
-       "message 0x205 is not received" do
+    it "expects no samples for full_status, run_time_state and generator state ports "\
+       "when message 0x205 is not received" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x200),
-                make_read_reply(0x201),
-                make_read_reply(0x202),
-                make_read_reply(0x203),
-                make_read_reply(0x204)
+                create_message(0x200),
+                create_message(0x201),
+                create_message(0x202),
+                create_message(0x203),
+                create_message(0x204)
             )
         end.to do
             have_no_new_sample task.full_status_port
             have_no_new_sample task.run_time_state_port
+            have_no_new_sample task.generator_state_port
+            have_no_new_sample(task.can_out_port)
         end
     end
 
-    it "expects a full_status and a run_time_state sample when " \
+    it "expects a full_status, a run_time_state and a generator state sample when " \
        "only message 0x205 is received" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x205)
+                create_message(0x205)
             )
         end.to do
             have_one_new_sample task.full_status_port
             have_one_new_sample task.run_time_state_port
+            have_one_new_sample task.generator_state_port
+            have_no_new_sample(task.can_out_port)
         end
     end
 
-    it "expects full_status to be reset when writing a message other than 0x205" do
+    it "expects full_status to be reset and not outputted the message 0x205 is not "\
+       "received" do
         expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x205)
+                create_message(0x205)
             )
         end.to { have_one_new_sample task.full_status_port }
 
         expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x203)
+                create_message(0x203)
             )
         end.to { have_no_new_sample task.full_status_port }
     end
@@ -93,63 +98,57 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
     it "does not send a command if one of the ready to command messages " \
        "were not received (messages with can_id 0x204, 0x205)" do
         expect_execution do
-            syskit_write task.control_cmd_port, true
-        end.to { have_no_new_sample(task.can_out_port, at_least_during: 1) }
-
-        expect_execution.to do
-            have_no_new_sample(task.can_out_port, at_least_during: 1)
-        end
-    end
-
-    it "sends a NO COMMAND message for 30ms before sending the command" do
-        expect_execution do
             syskit_write(
                 task.can_in_port,
-                make_read_reply(0x205)
+                create_message(0x203)
             )
-        end.to { have_one_new_sample task.run_time_state_port }
-
-        no_command = expect_execution do
             syskit_write task.control_cmd_port, true
+        end.to { have_no_new_sample(task.can_out_port) }
+    end
+
+    it "outputs the restart command before the start command at device startup" do
+        outputs = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                create_message(0x201,[0,5,0,0,0,0,0,0]),
+                create_message(0x204),
+                create_message(0x205)
+            )
+            syskit_write task.control_cmd_port, true
+            sleep 1
         end.to do
-            have_one_new_sample(task.can_out_port)
-                .matching { |s| no_command(s) }
+            [
+                have_one_new_sample(task.can_out_port),
+                have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.generator_state_port)
+            ]
         end
-
-        command = expect_execution.to do
-            have_one_new_sample(task.can_out_port)
-                .matching { |s| enable_generation(s) }
+        assert_equal(:RUNNING, outputs[2])
+        assert_equal(outputs[0].data[0], 0)
+        assert_equal(outputs[0].data[7], 1)
+        outputs = expect_execution do
+            syskit_write task.control_cmd_port, true
+            syskit_write(
+                task.can_in_port,
+                create_message(0x201,[0,5,0,0,0,0,0,0]),
+                create_message(0x205)
+            )
+        end.to do
+            [
+                have_one_new_sample(task.can_out_port),
+                have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.generator_state_port)
+            ]
         end
-
-        assert no_command.time <= command.time
-        assert_in_delta(
-            (command.time - no_command.time),
-            0.03,
-            1e-2
-        )
+        assert_equal(:RUNNING, outputs[2])
+        assert_equal(outputs[0].data[0], 1)
+        assert_equal(outputs[0].data[7], 2)
     end
 
-    def enable_generation(sample)
-        sample.data[0] == 1 && sample.data[1] == 0
-    end
-
-    def disable_generation(sample)
-        sample.data[0] == 0 && sample.data[1] == 1
-    end
-
-    def no_command(sample)
-        sample.data[0] == 0 && sample.data[1] == 0
-    end
-
-    def rock_now
-        now = Time.now
-        Time.at(now.tv_sec, now.tv_usec / 1000, :millisecond)
-    end
-
-    def make_read_reply(msg_type, data = Array.new(8, 0), time: Time.now)
+    def create_message(can_id, data = Array.new(8, 0), time: Time.now)
         message = Types.canbus.Message.new(
             time: time,
-            can_id: msg_type,
+            can_id: can_id,
             size: 8,
             data: data
         )

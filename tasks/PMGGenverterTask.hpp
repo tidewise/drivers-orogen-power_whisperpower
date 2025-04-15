@@ -32,16 +32,18 @@ namespace power_whisperpower {
     protected:
         PMGGenverter m_driver;
         bool m_ready_to_command;
-
-        void sendNoCommand();
+        bool m_last_command = false;
+        base::Time m_restart_command_deadline;
 
         /**
          * @brief Get the Generator State object from the full status report
-         * 
+         *
          * @param status The generator full status report
-         * @return GeneratorState 
+         * @return GeneratorState
          */
         GeneratorState getGeneratorState(PMGGenverterStatus const& status);
+
+        void handleControlCommand(bool control_cmd);
 
     public:
         /** TaskContext constructor for PMGGenverterTask

@@ -59,7 +59,6 @@ void PMGGenverterTask::writeStates()
     _full_status.write(status);
     auto run_time_state = m_driver.getRunTimeState();
     _run_time_state.write(run_time_state);
-    m_driver.resetFullUpdate();
 }
 void PMGGenverterTask::updateHook()
 {
@@ -75,6 +74,7 @@ void PMGGenverterTask::updateHook()
             m_ready_to_command = true;
         }
         writeStates();
+        m_driver.resetFullUpdate();
     }
 
     bool control_cmd;
@@ -85,21 +85,20 @@ void PMGGenverterTask::updateHook()
 }
 void PMGGenverterTask::handleControlCommand(bool control_cmd)
 {
-    if (control_cmd) {
-        if (control_cmd != m_last_command) {
-            m_restart_command_deadline = base::Time::now() + m_restart_duration;
-            m_last_command = control_cmd;
-        }
-        if (base::Time::now() <= m_restart_command_deadline) {
-            _can_out.write(m_driver.queryGeneratorCommand(false, false));
-        }
-        else {
-            _can_out.write(m_driver.queryGeneratorCommand(true, false));
-        }
-    }
-    else {
+    if (!control_cmd) {
         _can_out.write(m_driver.queryGeneratorCommand(false, true));
         m_last_command = control_cmd;
+        return;
+    }
+    if (!m_last_command) {
+        m_restart_command_deadline = base::Time::now() + m_restart_duration;
+        m_last_command = control_cmd;
+    }
+    if (base::Time::now() <= m_restart_command_deadline) {
+        _can_out.write(m_driver.queryGeneratorCommand(false, false));
+    }
+    else {
+        _can_out.write(m_driver.queryGeneratorCommand(true, false));
     }
 }
 void PMGGenverterTask::errorHook()

@@ -37,17 +37,19 @@ bool PMGGenverterTask::startHook()
 }
 GeneratorState getGeneratorState(PMGGenverterStatus const& status)
 {
+    GeneratorState generator_state;
+    if (status.engine_alarm || status.inverter_alarm) {
+        generator_state.failure_detected = true;
+    }
     uint8_t running_state = PMGGenverterStatus::Status::GENERATION_ENABLED |
                             PMGGenverterStatus::Status::ENGINE_ENABLED;
     if ((status.status & running_state) == running_state) {
-        return GeneratorState::RUNNING;
-    }
-    else if (!(PMGGenverterStatus::Status::GENERATION_ENABLED & status.status)) {
-        return GeneratorState::STOPPED;
+        generator_state.stage = GeneratorState::Stage::GENERATOR_STAGE_RUNNING;
     }
     else {
-        return GeneratorState::FAILURE;
+        generator_state.stage = GeneratorState::Stage::GENERATOR_STAGE_STOPPED;
     }
+    return generator_state;
 }
 void PMGGenverterTask::writeStates()
 {

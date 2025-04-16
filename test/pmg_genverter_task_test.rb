@@ -124,7 +124,11 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 have_one_new_sample(task.generator_state_port)
             ]
         end
-        assert_equal(:RUNNING, outputs[2])
+        expected_state = Types.power_whisperpower.GeneratorState.new(
+            stage: :GENERATOR_STAGE_RUNNING,
+            failure_detected: false
+        )
+        assert_equal(expected_state, outputs[2])
         assert_equal(outputs[0].data[0], 0)
         assert_equal(outputs[0].data[7], 1)
         outputs = expect_execution do
@@ -141,9 +145,31 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 have_one_new_sample(task.generator_state_port)
             ]
         end
-        assert_equal(:RUNNING, outputs[2])
+        assert_equal(expected_state, outputs[2])
         assert_equal(outputs[0].data[0], 1)
         assert_equal(outputs[0].data[7], 2)
+    end
+
+    it "indicates a failure in the generator state object when there is an alarm" do
+        outputs = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                create_message(0x201, [0, 5, 0, 1, 0, 0, 0, 0]),
+                create_message(0x204),
+                create_message(0x205)
+            )
+        end.to do
+            [
+                have_no_new_sample(task.can_out_port),
+                have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.generator_state_port)
+            ]
+        end
+        expected_state = Types.power_whisperpower.GeneratorState.new(
+            stage: :GENERATOR_STAGE_RUNNING,
+            failure_detected: true
+        )
+        assert_equal(expected_state, outputs[2])
     end
 
     def create_message(can_id, data = Array.new(8, 0), time: Time.now)

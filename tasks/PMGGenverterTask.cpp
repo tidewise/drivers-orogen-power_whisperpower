@@ -7,6 +7,7 @@ using namespace power_whisperpower;
 PMGGenverterTask::PMGGenverterTask(std::string const& name)
     : PMGGenverterTaskBase(name)
 {
+    _restart_duration.set(base::Time::fromMilliseconds(500));
 }
 
 PMGGenverterTask::~PMGGenverterTask()

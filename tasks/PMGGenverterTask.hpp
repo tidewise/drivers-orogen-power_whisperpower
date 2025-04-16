@@ -31,12 +31,11 @@ namespace power_whisperpower {
 
     protected:
         PMGGenverter m_driver;
-        bool m_ready_to_command;
         bool m_last_command = false;
         base::Time m_restart_duration;
         base::Time m_restart_command_deadline;
         void writeStates();
-        void handleControlCommand(bool control_cmd);
+        void handleControlCommand();
 
     public:
         /** TaskContext constructor for PMGGenverterTask

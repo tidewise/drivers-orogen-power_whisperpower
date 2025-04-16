@@ -56,7 +56,7 @@ task_context "PMGGenverterTask" do
 
     # The duration sending the restart command before the start command
     #
-    # This is done to ensure that the device is fully reseted before the startup
+    # This is done to ensure that the device is fully reset before the startup
     property "restart_duration", "/base/Time"
 
     # Control command

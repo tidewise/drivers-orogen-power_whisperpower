@@ -31,7 +31,6 @@ bool PMGGenverterTask::startHook()
         return false;
 
     m_driver = PMGGenverter();
-    m_ready_to_command = false;
     m_last_command = false;
     return true;
 }
@@ -67,24 +66,22 @@ void PMGGenverterTask::updateHook()
     canbus::Message can_in;
     while (_can_in.read(can_in, false) == RTT::NewData) {
         m_driver.process(can_in);
+        if (can_in.can_id == 0x204 || can_in.can_id == 0x205) {
+            handleControlCommand();
+        }
         if (!m_driver.hasFullUpdate()) {
             continue;
-        }
-        if (can_in.can_id == 0x204 || can_in.can_id == 0x205) {
-            m_ready_to_command = true;
         }
         writeStates();
         m_driver.resetFullUpdate();
     }
-
+}
+void PMGGenverterTask::handleControlCommand()
+{
     bool control_cmd;
-    if (_control_cmd.read(control_cmd) != RTT::NewData || !m_ready_to_command) {
+    if (_control_cmd.read(control_cmd) == RTT::NoData) {
         return;
     }
-    handleControlCommand(control_cmd);
-}
-void PMGGenverterTask::handleControlCommand(bool control_cmd)
-{
     if (!control_cmd) {
         _can_out.write(m_driver.queryGeneratorCommand(false, true));
         m_last_command = control_cmd;
@@ -92,7 +89,7 @@ void PMGGenverterTask::handleControlCommand(bool control_cmd)
     }
     if (!m_last_command) {
         m_restart_command_deadline = base::Time::now() + m_restart_duration;
-        m_last_command = control_cmd;
+        m_last_command = true;
     }
     if (base::Time::now() <= m_restart_command_deadline) {
         _can_out.write(m_driver.queryGeneratorCommand(false, false));

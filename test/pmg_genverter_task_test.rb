@@ -26,6 +26,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
     it "expects a full_status, a run_time_state and a generator_state sample when " \
        "receiving all messages" do
         expect_execution do
+            syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
                 create_message(0x200),
@@ -40,7 +41,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
                 have_one_new_sample(task.full_status_port),
                 have_one_new_sample(task.run_time_state_port),
                 have_one_new_sample(task.genset_state_port),
-                have_no_new_sample(task.can_out_port)
+                have_one_new_sample(task.can_out_port)
             ]
         end
     end
@@ -48,6 +49,8 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
     it "expects no samples for full_status, run_time_state and generator state ports "\
        "when message 0x205 is not received" do
         expect_execution do
+            syskit_write task.control_cmd_port, true
+
             syskit_write(
                 task.can_in_port,
                 create_message(0x200),
@@ -60,13 +63,15 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             have_no_new_sample task.full_status_port
             have_no_new_sample task.run_time_state_port
             have_no_new_sample task.genset_state_port
-            have_no_new_sample(task.can_out_port)
+            have_one_new_sample(task.can_out_port)
         end
     end
 
     it "expects a full_status, a run_time_state and a generator state sample when " \
        "only message 0x205 is received" do
         expect_execution do
+            syskit_write task.control_cmd_port, true
+
             syskit_write(
                 task.can_in_port,
                 create_message(0x205)
@@ -75,13 +80,15 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             have_one_new_sample task.full_status_port
             have_one_new_sample task.run_time_state_port
             have_one_new_sample task.genset_state_port
-            have_no_new_sample(task.can_out_port)
+            have_one_new_sample(task.can_out_port)
         end
     end
 
-    it "expects full_status to be reset and not outputted the message 0x205 is not "\
+    it "expects full_status to be reset and not output when the message 0x205 is not "\
        "received" do
         expect_execution do
+            syskit_write task.control_cmd_port, true
+
             syskit_write(
                 task.can_in_port,
                 create_message(0x205)
@@ -99,6 +106,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
     it "does not send a command if one of the ready to command messages " \
        "were not received (messages with can_id 0x204, 0x205)" do
         expect_execution do
+            syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
                 create_message(0x203)
@@ -109,13 +117,12 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
 
     it "outputs the restart command before the start command at device startup" do
         outputs = expect_execution do
+            syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
                 create_message(0x201, [0, 5, 0, 0, 0, 0, 0, 0]),
-                create_message(0x204),
                 create_message(0x205)
             )
-            syskit_write task.control_cmd_port, true
             sleep 1
         end.to do
             [
@@ -152,6 +159,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
 
     it "indicates a failure in the generator state object when there is an alarm" do
         outputs = expect_execution do
+            syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
                 create_message(0x201, [0, 5, 0, 1, 0, 0, 0, 0]),
@@ -160,7 +168,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             )
         end.to do
             [
-                have_no_new_sample(task.can_out_port),
+                have_one_new_sample(task.can_out_port),
                 have_one_new_sample(task.full_status_port),
                 have_one_new_sample(task.genset_state_port)
             ]
@@ -174,6 +182,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
 
     it "ouputs the stopped stage" do
         outputs = expect_execution do
+            syskit_write task.control_cmd_port, true
             syskit_write(
                 task.can_in_port,
                 create_message(0x201, [0, 1, 0, 0, 0, 0, 0, 0]),
@@ -182,7 +191,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             )
         end.to do
             [
-                have_no_new_sample(task.can_out_port),
+                have_one_new_sample(task.can_out_port),
                 have_one_new_sample(task.full_status_port),
                 have_one_new_sample(task.genset_state_port)
             ]

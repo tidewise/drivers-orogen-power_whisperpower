@@ -39,7 +39,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             [
                 have_one_new_sample(task.full_status_port),
                 have_one_new_sample(task.run_time_state_port),
-                have_one_new_sample(task.generator_state_port),
+                have_one_new_sample(task.genset_state_port),
                 have_no_new_sample(task.can_out_port)
             ]
         end
@@ -59,7 +59,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         end.to do
             have_no_new_sample task.full_status_port
             have_no_new_sample task.run_time_state_port
-            have_no_new_sample task.generator_state_port
+            have_no_new_sample task.genset_state_port
             have_no_new_sample(task.can_out_port)
         end
     end
@@ -74,7 +74,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         end.to do
             have_one_new_sample task.full_status_port
             have_one_new_sample task.run_time_state_port
-            have_one_new_sample task.generator_state_port
+            have_one_new_sample task.genset_state_port
             have_no_new_sample(task.can_out_port)
         end
     end
@@ -121,11 +121,11 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             [
                 have_one_new_sample(task.can_out_port),
                 have_one_new_sample(task.full_status_port),
-                have_one_new_sample(task.generator_state_port)
+                have_one_new_sample(task.genset_state_port)
             ]
         end
-        expected_state = Types.power_whisperpower.GeneratorState.new(
-            stage: :GENERATOR_STAGE_RUNNING,
+        expected_state = Types.power_whisperpower.GensetState.new(
+            stage: :GENSET_STAGE_RUNNING,
             failure_detected: false
         )
         assert_equal(expected_state, outputs[2])
@@ -142,7 +142,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             [
                 have_one_new_sample(task.can_out_port),
                 have_one_new_sample(task.full_status_port),
-                have_one_new_sample(task.generator_state_port)
+                have_one_new_sample(task.genset_state_port)
             ]
         end
         assert_equal(expected_state, outputs[2])
@@ -162,12 +162,34 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
             [
                 have_no_new_sample(task.can_out_port),
                 have_one_new_sample(task.full_status_port),
-                have_one_new_sample(task.generator_state_port)
+                have_one_new_sample(task.genset_state_port)
             ]
         end
-        expected_state = Types.power_whisperpower.GeneratorState.new(
-            stage: :GENERATOR_STAGE_RUNNING,
+        expected_state = Types.power_whisperpower.GensetState.new(
+            stage: :GENSET_STAGE_RUNNING,
             failure_detected: true
+        )
+        assert_equal(expected_state, outputs[2])
+    end
+
+    it "ouputs the stopped stage" do
+        outputs = expect_execution do
+            syskit_write(
+                task.can_in_port,
+                create_message(0x201, [0, 1, 0, 0, 0, 0, 0, 0]),
+                create_message(0x204),
+                create_message(0x205)
+            )
+        end.to do
+            [
+                have_no_new_sample(task.can_out_port),
+                have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.genset_state_port)
+            ]
+        end
+        expected_state = Types.power_whisperpower.GensetState.new(
+            stage: :GENSET_STAGE_STOPPED,
+            failure_detected: false
         )
         assert_equal(expected_state, outputs[2])
     end

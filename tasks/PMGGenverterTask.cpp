@@ -35,27 +35,27 @@ bool PMGGenverterTask::startHook()
     m_last_command = false;
     return true;
 }
-GeneratorState getGeneratorState(PMGGenverterStatus const& status)
+GensetState getGensetState(PMGGenverterStatus const& status)
 {
-    GeneratorState generator_state;
+    GensetState generator_state;
     if (status.engine_alarm || status.inverter_alarm) {
         generator_state.failure_detected = true;
     }
     uint8_t running_state = PMGGenverterStatus::Status::GENERATION_ENABLED |
                             PMGGenverterStatus::Status::ENGINE_ENABLED;
     if ((status.status & running_state) == running_state) {
-        generator_state.stage = GeneratorState::Stage::GENERATOR_STAGE_RUNNING;
+        generator_state.stage = GensetState::Stage::GENSET_STAGE_RUNNING;
     }
     else {
-        generator_state.stage = GeneratorState::Stage::GENERATOR_STAGE_STOPPED;
+        generator_state.stage = GensetState::Stage::GENSET_STAGE_STOPPED;
     }
     return generator_state;
 }
 void PMGGenverterTask::writeStates()
 {
     auto status = m_driver.getStatus();
-    auto generator_state = getGeneratorState(status);
-    _generator_state.write(generator_state);
+    auto generator_state = getGensetState(status);
+    _genset_state.write(generator_state);
     _full_status.write(status);
     auto run_time_state = m_driver.getRunTimeState();
     _run_time_state.write(run_time_state);

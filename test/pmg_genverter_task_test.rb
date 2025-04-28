@@ -39,6 +39,7 @@ describe OroGen.power_whisperpower.PMGGenverterTask do
         end.to do
             [
                 have_one_new_sample(task.full_status_port),
+                have_one_new_sample(task.ac_generator_status_port),
                 have_one_new_sample(task.run_time_state_port),
                 have_one_new_sample(task.genset_state_port),
                 have_one_new_sample(task.can_out_port)

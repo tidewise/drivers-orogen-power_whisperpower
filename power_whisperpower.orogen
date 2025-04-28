@@ -71,7 +71,7 @@ task_context "PMGGenverterTask" do
     output_port "can_out", "/canbus/Message"
 
     # State of the AC output
-    output_port "ac_status", "/power_base/ACSourceStatus"
+    output_port "ac_generator_status", "/power_base/ACGeneratorStatus"
 
     # Full PMG Genverter status
     output_port "full_status", "/power_whisperpower/PMGGenverterStatus"

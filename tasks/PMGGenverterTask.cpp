@@ -1,6 +1,7 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 
 #include "PMGGenverterTask.hpp"
+#include <power_base/ACGeneratorStatus.hpp>
 
 using namespace power_whisperpower;
 
@@ -34,7 +35,7 @@ bool PMGGenverterTask::startHook()
     m_last_command = false;
     return true;
 }
-GensetState getGensetState(PMGGenverterStatus const& status)
+static GensetState getGensetState(PMGGenverterStatus const& status)
 {
     GensetState generator_state;
     if (status.engine_alarm || status.inverter_alarm) {
@@ -50,11 +51,23 @@ GensetState getGensetState(PMGGenverterStatus const& status)
     }
     return generator_state;
 }
+static power_base::ACGeneratorStatus getACGeneratorStatus(
+    PMGGenverterStatus const& full_status)
+{
+    power_base::ACGeneratorStatus status;
+    status.time = full_status.time;
+    status.current = full_status.ac_current;
+    status.voltage = full_status.ac_voltage;
+    status.generator_rotational_velocity = full_status.engine_angular_speed;
+    return status;
+}
 void PMGGenverterTask::writeStates()
 {
     auto status = m_driver.getStatus();
     auto generator_state = getGensetState(status);
     _genset_state.write(generator_state);
+    auto ac_generator_status = getACGeneratorStatus(status);
+    _ac_generator_status.write(ac_generator_status);
     _full_status.write(status);
     auto run_time_state = m_driver.getRunTimeState();
     _run_time_state.write(run_time_state);

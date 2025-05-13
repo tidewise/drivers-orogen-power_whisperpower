@@ -22,6 +22,7 @@ bool DCPowerCubeTask::configureHook()
     }
 
     m_driver = DCPowerCube(_device_id.get());
+    m_io_read_timeout = _io_read_timeout.get();
     return true;
 }
 bool DCPowerCubeTask::startHook()
@@ -30,6 +31,7 @@ bool DCPowerCubeTask::startHook()
         return false;
     }
     m_driver.resetFullUpdate();
+    m_deadline = base::Time::now() + m_io_read_timeout;
     return true;
 }
 
@@ -80,13 +82,14 @@ void DCPowerCubeTask::updateHook()
     DCPowerCubeTaskBase::updateHook();
 
     canbus::Message can_in;
+
     while (_can_in.read(can_in, false) == RTT::NewData) {
+        m_deadline = base::Time::now() + m_io_read_timeout;
         m_driver.process(can_in);
 
         if (!m_driver.hasFullUpdate()) {
             continue;
         }
-
         auto status = m_driver.getStatus();
         _full_status.write(status);
         m_driver.resetFullUpdate();
@@ -94,6 +97,10 @@ void DCPowerCubeTask::updateHook()
         _ac_generator_status.write(toACGeneratorStatus(status));
         _ac_grid_status.write(toACGridStatus(status));
         _dc_output_status.write(toDCSourceStatus(status));
+    }
+    if (base::Time::now() > m_deadline)
+    {
+        return exception(IO_TIMEOUT);
     }
 }
 void DCPowerCubeTask::errorHook()

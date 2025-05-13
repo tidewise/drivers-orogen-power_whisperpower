@@ -20,6 +20,8 @@ namespace power_whisperpower {
 
     protected:
         DCPowerCube m_driver;
+        base::Time m_io_read_timeout;
+        base::Time m_deadline;
 
     public:
         /** TaskContext constructor for DCPowerCubeTask

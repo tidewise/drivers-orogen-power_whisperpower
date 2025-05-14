@@ -19,8 +19,49 @@ describe OroGen.power_whisperpower.DCPowerCubeTask do
                   .deployed_as("task_under_test")
         )
         task.properties.device_id = 5
+        task.properties.io_read_timeout = Time.at(2)
         syskit_configure_and_start(task)
         task
+    end
+
+    it "goes into IO_TIMEOUT exception state when it does not receive data during the "\
+    "io_read_timeout" do
+        now = rock_now
+        status = expect_execution.timeout(2.1).to { emit task.io_timeout_event }
+        assert (status.time - now) > 2
+    end
+
+    it "keeps in running state when it does not receive data before achieve the "\
+    "io_read_timeout" do
+        expect_execution.timeout(1.9).to { not_emit task.io_timeout_event }
+    end
+
+    it "goes into IO_TIMEOUT exception state when it stops receiving data during the "\
+    "io_read_timeout" do
+        expect_execution do
+            syskit_write(
+                task.can_in_port,
+                make_read_reply(0x2100, [0, 0, 0, 0]),
+                make_read_reply(0x21A0, [0, 0, 0, 0])
+            )
+        end.to { have_one_new_sample task.full_status_port }
+
+        now = rock_now
+        status = expect_execution.timeout(2.1).to { emit task.io_timeout_event }
+        assert (status.time - now) > 2
+    end
+
+    it "keeps in running state when it stops receiving data for a time smaller than the "\
+    "io_read_timeout" do
+        expect_execution do
+            syskit_write(
+                task.can_in_port,
+                make_read_reply(0x2100, [0, 0, 0, 0]),
+                make_read_reply(0x21A0, [0, 0, 0, 0])
+            )
+        end.to { have_one_new_sample task.full_status_port }
+
+        expect_execution.timeout(1.9).to { not_emit task.io_timeout_event }
     end
 
     it "outputs a full state after receiving a full update" do

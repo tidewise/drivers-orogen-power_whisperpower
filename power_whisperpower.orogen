@@ -24,6 +24,7 @@ task_context "DCPowerCubeTask" do
     needs_configuration
 
     property "device_id", "/int", 1
+    property "io_read_timeout", "/base/Time"
 
     # CAN messages coming from the device
     input_port("can_in", "/canbus/Message")
@@ -47,7 +48,9 @@ task_context "DCPowerCubeTask" do
     # Output of the DC Cube itself
     output_port "dc_output_status", "/power_base/DCSourceStatus"
 
-    port_driven
+    exception_states :IO_TIMEOUT
+
+    port_driven timeout: 0.1
 end
 
 # Driver component for the PMG Genverter

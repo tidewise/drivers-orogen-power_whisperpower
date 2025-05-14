@@ -9,6 +9,7 @@ DCPowerCubeTask::DCPowerCubeTask(std::string const& name)
     : DCPowerCubeTaskBase(name)
     , m_driver(1)
 {
+    _io_read_timeout.set(base::Time::fromSeconds(2));
 }
 
 DCPowerCubeTask::~DCPowerCubeTask()

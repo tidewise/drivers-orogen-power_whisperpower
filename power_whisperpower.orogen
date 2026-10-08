@@ -58,6 +58,8 @@ end
 task_context "PMGGenverterTask" do
     needs_configuration
 
+    property "device_id", "/int", 0
+
     # The duration sending the restart command before the start command
     #
     # This is done to ensure that the device is fully reset before the startup

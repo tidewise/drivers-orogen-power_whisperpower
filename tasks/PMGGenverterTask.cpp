@@ -31,7 +31,7 @@ bool PMGGenverterTask::startHook()
     if (!PMGGenverterTaskBase::startHook())
         return false;
 
-    m_driver.reset(new PMGGenverter(_protocol.get()));
+    m_driver.reset(new PMGGenverter(_protocol.get(), _device_id.get()));
     m_last_command = false;
     return true;
 }

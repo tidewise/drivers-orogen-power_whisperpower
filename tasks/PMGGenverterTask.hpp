@@ -5,7 +5,6 @@
 
 #include "power_whisperpower/PMGGenverterTaskBase.hpp"
 #include <power_whisperpower/PMGGenverter.hpp>
-#include <memory>
 
 namespace power_whisperpower {
 
@@ -31,7 +30,7 @@ namespace power_whisperpower {
         friend class PMGGenverterTaskBase;
 
     protected:
-        std::unique_ptr<PMGGenverter> m_driver;
+        PMGGenverter m_driver;
         bool m_last_command = false;
         base::Time m_restart_duration;
         base::Time m_restart_command_deadline;

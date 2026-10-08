@@ -31,7 +31,7 @@ bool PMGGenverterTask::startHook()
     if (!PMGGenverterTaskBase::startHook())
         return false;
 
-    m_driver = PMGGenverter();
+    m_driver.reset(new PMGGenverter(_protocol.get(), _device_id.get()));
     m_last_command = false;
     return true;
 }
@@ -63,13 +63,13 @@ static power_base::ACGeneratorStatus getACGeneratorStatus(
 }
 void PMGGenverterTask::writeStates()
 {
-    auto status = m_driver.getStatus();
+    auto status = m_driver->getStatus();
     auto generator_state = getGensetState(status);
     _genset_state.write(generator_state);
     auto ac_generator_status = getACGeneratorStatus(status);
     _ac_generator_status.write(ac_generator_status);
     _full_status.write(status);
-    auto run_time_state = m_driver.getRunTimeState();
+    auto run_time_state = m_driver->getRunTimeState();
     _run_time_state.write(run_time_state);
 }
 void PMGGenverterTask::updateHook()
@@ -78,15 +78,15 @@ void PMGGenverterTask::updateHook()
 
     canbus::Message can_in;
     while (_can_in.read(can_in, false) == RTT::NewData) {
-        m_driver.process(can_in);
+        m_driver->process(can_in);
         if (can_in.can_id == 0x204 || can_in.can_id == 0x205) {
             handleControlCommand();
         }
-        if (!m_driver.hasFullUpdate()) {
+        if (!m_driver->hasFullUpdate()) {
             continue;
         }
         writeStates();
-        m_driver.resetFullUpdate();
+        m_driver->resetFullUpdate();
     }
 }
 void PMGGenverterTask::handleControlCommand()
@@ -96,7 +96,7 @@ void PMGGenverterTask::handleControlCommand()
         return;
     }
     if (!control_cmd) {
-        _can_out.write(m_driver.queryGeneratorCommand(false, true));
+        _can_out.write(m_driver->queryGeneratorCommand(false, true));
         m_last_command = control_cmd;
         return;
     }
@@ -105,10 +105,10 @@ void PMGGenverterTask::handleControlCommand()
         m_last_command = true;
     }
     if (base::Time::now() <= m_restart_command_deadline) {
-        _can_out.write(m_driver.queryGeneratorCommand(false, false));
+        _can_out.write(m_driver->queryGeneratorCommand(false, false));
     }
     else {
-        _can_out.write(m_driver.queryGeneratorCommand(true, false));
+        _can_out.write(m_driver->queryGeneratorCommand(true, false));
     }
 }
 void PMGGenverterTask::errorHook()

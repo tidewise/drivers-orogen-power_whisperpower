@@ -16,6 +16,7 @@ import_types_from "power_whisperpower/GensetState.hpp"
 import_types_from "power_whisperpower/PMGGenverterStatus.hpp"
 import_types_from "power_whisperpower/RunTimeState.hpp"
 import_types_from "power_whisperpower/SmartShuntStatus.hpp"
+import_types_from "power_whisperpower/PMGGenverter.hpp"
 
 typekit.export_types "power_whisperpower/GensetState"
 
@@ -57,10 +58,15 @@ end
 task_context "PMGGenverterTask" do
     needs_configuration
 
+    property "device_id", "/int", 0
+
     # The duration sending the restart command before the start command
     #
     # This is done to ensure that the device is fully reset before the startup
     property "restart_duration", "/base/Time"
+
+    # The protocol to use (can_protocol or whisper_connect)
+    property "protocol", "/power_whisperpower/PMGGenverterProtocol", :CAN_PROTOCOL
 
     # Control command
     #

@@ -7,6 +7,7 @@ using namespace power_whisperpower;
 
 PMGGenverterTask::PMGGenverterTask(std::string const& name)
     : PMGGenverterTaskBase(name)
+    , m_driver(power_whisperpower::CAN_PROTOCOL, 0)
 {
     _restart_duration.set(base::Time::fromMilliseconds(500));
 }
@@ -31,7 +32,7 @@ bool PMGGenverterTask::startHook()
     if (!PMGGenverterTaskBase::startHook())
         return false;
 
-    m_driver = PMGGenverter();
+    m_driver = PMGGenverter(_protocol.get(), _device_id.get());
     m_last_command = false;
     return true;
 }
